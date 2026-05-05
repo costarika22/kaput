@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 // Replay penalty multipliers
 function getPenaltyMultiplier(attempt: number): { mult: number; label: string | null } {
   if (attempt <= 2) return { mult: 1.0, label: null };
@@ -13,6 +11,7 @@ function getPenaltyMultiplier(attempt: number): { mult: number; label: string | 
 
 export async function POST(req: NextRequest) {
   try {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const body = await req.json();
     const { items, scenarioName, scenarioDescription, attemptNumber } = body as {
       items: [string, string, string];
@@ -98,7 +97,11 @@ Judge these items and return your JSON verdict.`;
       penaltyLabel: label,
     });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error('[judge] error:', err);
-    return NextResponse.json({ error: 'Judgment failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Judgment failed', detail: process.env.NODE_ENV === 'development' ? message : undefined },
+      { status: 500 }
+    );
   }
 }

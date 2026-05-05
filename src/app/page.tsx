@@ -47,7 +47,10 @@ export default function GamePage() {
         }),
       });
 
-      if (!judgeRes.ok) throw new Error('Judgment failed');
+      if (!judgeRes.ok) {
+        const errBody = await judgeRes.json().catch(() => ({}));
+        throw new Error(errBody.detail || errBody.error || 'Judgment failed');
+      }
       const judgment: JudgmentResult = await judgeRes.json();
       setResult(judgment);
 
