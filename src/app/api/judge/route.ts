@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 
+// Extend Vercel function timeout (hobby plan default is 10s — too short for AI calls)
+export const maxDuration = 60;
+
 // Replay penalty multipliers
 function getPenaltyMultiplier(attempt: number): { mult: number; label: string | null } {
   if (attempt <= 2) return { mult: 1.0, label: null };
@@ -100,7 +103,7 @@ Judge these items and return your JSON verdict.`;
     const message = err instanceof Error ? err.message : String(err);
     console.error('[judge] error:', err);
     return NextResponse.json(
-      { error: 'Judgment failed', detail: process.env.NODE_ENV === 'development' ? message : undefined },
+      { error: 'Judgment failed', detail: message },
       { status: 500 }
     );
   }
