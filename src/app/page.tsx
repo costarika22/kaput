@@ -1,65 +1,137 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect, useCallback } from 'react';
+import { Screen, JudgmentResult } from '@/types';
+import { getTodayScenario } from '@/lib/scenarios';
+import { getUsername, setUsername as saveUsername, incrementTodayAttemptCount } from '@/lib/username';
+import LandingScreen from '@/components/LandingScreen';
+import InputScreen from '@/components/InputScreen';
+import LoadingScreen from '@/components/LoadingScreen';
+import ResultsScreen from '@/components/ResultsScreen';
+import ShareCard from '@/components/ShareCard';
+
+export default function GamePage() {
+  const scenario = getTodayScenario();
+  const [screen, setScreen] = useState<Screen>('landing');
+  const [username, setUsernameState] = useState('');
+  const [items, setItems] = useState<[string, string, string]>(['', '', '']);
+  const [result, setResult] = useState<JudgmentResult | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUsernameState(getUsername());
+  }, []);
+
+  function handleUsernameChange(name: string) {
+    saveUsername(name);
+    setUsernameState(name);
+  }
+
+  const handleSubmitItems = useCallback(async (submittedItems: [string, string, string]) => {
+    setItems(submittedItems);
+    setError(null);
+    setScreen('loading');
+
+    const attemptNumber = incrementTodayAttemptCount();
+
+    try {
+      const judgeRes = await fetch('/api/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: submittedItems,
+          scenarioName: scenario.name,
+          scenarioDescription: scenario.description,
+          attemptNumber,
+        }),
+      });
+
+      if (!judgeRes.ok) throw new Error('Judgment failed');
+      const judgment: JudgmentResult = await judgeRes.json();
+      setResult(judgment);
+
+      // Save score (fire and forget)
+      const currentUsername = getUsername();
+      fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUsername,
+          score: judgment.daysTotal,
+          scenario: scenario.name,
+          attemptNumber,
+        }),
+      }).catch(() => {});
+
+      // Fetch rank after score saves
+      setTimeout(async () => {
+        try {
+          const lbRes = await fetch(`/api/leaderboard?username=${encodeURIComponent(currentUsername)}`);
+          const lbData = await lbRes.json();
+          setRank(lbData.playerRank ?? null);
+        } catch {
+          // rank unavailable — fine
+        }
+      }, 800);
+
+      setScreen('results');
+    } catch (err) {
+      console.error(err);
+      setError('The monkey is temporarily unavailable. Please try again.');
+      setScreen('input');
+    }
+  }, [scenario]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="min-h-screen">
+      {error && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-red-600/90 text-white px-5 py-3 rounded-xl text-sm font-bold shadow-xl backdrop-blur">
+          {error}
+        </div>
+      )}
+
+      {screen === 'landing' && (
+        <LandingScreen
+          scenario={scenario}
+          username={username}
+          onUsernameChange={handleUsernameChange}
+          onStart={() => setScreen('input')}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      {screen === 'input' && (
+        <InputScreen
+          scenario={scenario}
+          onSubmit={handleSubmitItems}
+          onBack={() => setScreen('landing')}
+        />
+      )}
+
+      {screen === 'loading' && (
+        <LoadingScreen scenario={scenario} />
+      )}
+
+      {screen === 'results' && result && (
+        <ResultsScreen
+          scenario={scenario}
+          items={items}
+          result={result}
+          username={username}
+          onTryAgain={() => { setResult(null); setScreen('input'); }}
+          onShare={() => setScreen('share')}
+        />
+      )}
+
+      {screen === 'share' && result && (
+        <ShareCard
+          scenario={scenario}
+          result={result}
+          username={username}
+          rank={rank}
+          onBack={() => setScreen('results')}
+        />
+      )}
+    </main>
   );
 }

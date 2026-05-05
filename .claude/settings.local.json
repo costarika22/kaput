@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --yes)",
+      "Bash(npx create-next-app@latest kaput --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git --yes)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npx --yes tsc --noEmit)",
+      "Bash(node /Users/sarikagoel/Desktop/Kaput/node_modules/typescript/lib/tsc.js --noEmit)",
+      "Bash(npm run *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
