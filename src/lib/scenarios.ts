@@ -179,5 +179,5 @@ export function getTodayScenario(): Scenario {
   const utcDay = Math.floor(
     Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) / 86400000
   );
-  return SCENARIOS[utcDay % SCENARIOS.length];
+  return SCENARIOS[(utcDay + 1) % SCENARIOS.length]; // TODO: remove +1 offset after demo
 }
