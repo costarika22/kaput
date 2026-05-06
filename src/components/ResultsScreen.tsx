@@ -39,6 +39,13 @@ export default function ResultsScreen({
   const mood: MonkeyMood = getMoodFromScore(result.daysTotal);
   const hasAnimated = useRef(false);
 
+  // Default leaderboard open on desktop
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setLbOpen(true);
+    }
+  }, []);
+
   // Count-up animation
   useEffect(() => {
     if (hasAnimated.current) return;
@@ -96,19 +103,25 @@ export default function ResultsScreen({
 
   return (
     <div
+      className="animated-gradient"
       style={{
         minHeight: '100svh',
-        display: 'flex',
-        flexDirection: 'column',
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
         fontFamily: 'var(--font-fira), monospace',
       }}
     >
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '48px 20px 24px' }}>
-
+      <div
+        style={{
+          maxWidth: '780px',
+          margin: '0 auto',
+          padding: '48px 20px 40px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         {/* Score header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <p style={{ fontSize: '13px', letterSpacing: '3px', color: '#6a8a9a', textTransform: 'uppercase', marginBottom: '4px' }}>
+          <p style={{ fontSize: '13px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginBottom: '4px' }}>
             You would survive
           </p>
           <p
@@ -117,13 +130,23 @@ export default function ResultsScreen({
           >
             {displayDays} <span style={{ fontSize: '40px', letterSpacing: '0px' }}>Days</span>
           </p>
-          <p style={{ fontSize: '13px', letterSpacing: '3px', color: '#6a8a9a', textTransform: 'uppercase', marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginTop: '4px' }}>
             {article(scenario.name)} {scenario.name}
           </p>
         </div>
 
-        {/* Monkey + Verdict side by side */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '32px' }}>
+        {/* Monkey + Verdict */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '20px',
+            marginBottom: '32px',
+            background: 'rgba(255,255,255,0.45)',
+            borderRadius: '12px',
+            padding: '20px',
+          }}
+        >
           <div style={{ flexShrink: 0 }}>
             <MonkeyExpression mood={mood} size={100} />
           </div>
@@ -133,7 +156,7 @@ export default function ResultsScreen({
               fontSize: '14px',
               fontStyle: 'italic',
               color: '#2a2a2a',
-              lineHeight: 1.5,
+              lineHeight: 1.6,
               flex: 1,
               paddingTop: '8px',
             }}
@@ -143,9 +166,16 @@ export default function ResultsScreen({
         </div>
 
         {/* Item Ratings */}
-        <div style={{ marginBottom: '16px' }}>
+        <div
+          style={{
+            marginBottom: '20px',
+            background: 'rgba(255,255,255,0.45)',
+            borderRadius: '12px',
+            padding: '20px',
+          }}
+        >
           <p style={sectionHeadStyle}>Item Ratings</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {items.map((item, idx) => {
               const score = Math.round(result.itemScores[idx]);
               const color = scoreBarColor(score);
@@ -154,17 +184,17 @@ export default function ResultsScreen({
                   <span style={{ ...labelStyle, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item}
                   </span>
-                  <div style={{ width: '120px', height: '6px', background: '#d0d0d0', borderRadius: '3px', flexShrink: 0 }}>
+                  <div style={{ width: '140px', height: '6px', background: 'rgba(0,0,0,0.12)', borderRadius: '3px', flexShrink: 0 }}>
                     <div style={{ width: `${score}%`, height: '100%', background: color, borderRadius: '3px', transition: 'width 0.8s ease' }} />
                   </div>
-                  <span style={{ ...labelStyle, fontWeight: 700, width: '24px', textAlign: 'right', flexShrink: 0 }}>{score}</span>
+                  <span style={{ ...labelStyle, fontWeight: 700, width: '28px', textAlign: 'right', flexShrink: 0 }}>{score}</span>
                 </div>
               );
             })}
 
             {/* Combo bonus */}
             {result.comboBonus && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '4px', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
                 <span style={{ ...labelStyle, flex: 1 }}>Killer combo</span>
                 <span style={{ fontFamily: 'var(--font-fira), monospace', fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>+ 20 days</span>
               </div>
@@ -172,7 +202,7 @@ export default function ResultsScreen({
 
             {/* Replay penalty */}
             {result.penaltyApplied && result.penaltyLabel && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingTop: '4px', borderTop: result.comboBonus ? 'none' : '1px solid rgba(0,0,0,0.08)' }}>
                 <span style={{ ...labelStyle, flex: 1 }}>Replay penalty</span>
                 <span style={{ fontFamily: 'var(--font-fira), monospace', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>
                   {result.penaltyLabel}
@@ -182,8 +212,15 @@ export default function ResultsScreen({
           </div>
         </div>
 
-        {/* Leaderboard (collapsible) */}
-        <div style={{ marginBottom: '24px' }}>
+        {/* Leaderboard (collapsible, open by default on desktop) */}
+        <div
+          style={{
+            marginBottom: '24px',
+            background: 'rgba(255,255,255,0.45)',
+            borderRadius: '12px',
+            overflow: 'hidden',
+          }}
+        >
           <button
             onClick={() => setLbOpen((o) => !o)}
             style={{
@@ -193,25 +230,25 @@ export default function ResultsScreen({
               justifyContent: 'space-between',
               background: 'none',
               border: 'none',
-              borderBottom: '1px solid #b0b0b0',
-              padding: '8px 0',
+              padding: '16px 20px',
               cursor: 'pointer',
+              borderBottom: lbOpen ? '1px solid rgba(0,0,0,0.08)' : 'none',
             }}
           >
-            <span style={sectionHeadStyle}>Today&apos;s Leaderboard</span>
+            <span style={{ ...sectionHeadStyle, marginBottom: 0 }}>Today&apos;s Leaderboard</span>
             <span style={{ fontSize: '18px', color: '#4a4a4a', transform: lbOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
               &#8964;
             </span>
           </button>
 
           {lbOpen && (
-            <div style={{ marginTop: '12px' }}>
+            <div style={{ padding: '12px 20px 16px' }}>
               {lbLoading ? (
                 <p style={{ ...labelStyle, textAlign: 'center', padding: '8px 0' }}>Loading...</p>
               ) : leaderboard.length === 0 ? (
                 <p style={{ ...labelStyle, textAlign: 'center', padding: '8px 0' }}>No scores yet.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {leaderboard.slice(0, 10).map((entry, idx) => (
                     <div
                       key={entry.id}
@@ -265,7 +302,7 @@ export default function ResultsScreen({
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', maxWidth: '480px', margin: '0 auto', width: '100%' }}>
           <button
             onClick={onTryAgain}
             style={{
@@ -308,7 +345,6 @@ export default function ResultsScreen({
             </svg>
           </button>
         </div>
-
       </div>
     </div>
   );
