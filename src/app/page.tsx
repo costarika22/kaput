@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Screen, JudgmentResult } from '@/types';
 import { getTodayScenario } from '@/lib/scenarios';
 import { getUsername, setUsername as saveUsername, incrementTodayAttemptCount } from '@/lib/username';
+import SplashScreen from '@/components/SplashScreen';
 import LandingScreen from '@/components/LandingScreen';
 import InputScreen from '@/components/InputScreen';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -12,7 +13,7 @@ import ShareCard from '@/components/ShareCard';
 
 export default function GamePage() {
   const scenario = getTodayScenario();
-  const [screen, setScreen] = useState<Screen>('landing');
+  const [screen, setScreen] = useState<Screen>('splash');
   const [username, setUsernameState] = useState('');
   const [items, setItems] = useState<[string, string, string]>(['', '', '']);
   const [result, setResult] = useState<JudgmentResult | null>(null);
@@ -21,6 +22,11 @@ export default function GamePage() {
 
   useEffect(() => {
     setUsernameState(getUsername());
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setScreen('landing'), 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   function handleUsernameChange(name: string) {
@@ -94,6 +100,8 @@ export default function GamePage() {
         </div>
       )}
 
+      {screen === 'splash' && <SplashScreen />}
+
       {screen === 'landing' && (
         <LandingScreen
           scenario={scenario}
@@ -115,7 +123,7 @@ export default function GamePage() {
         <LoadingScreen scenario={scenario} />
       )}
 
-      {screen === 'results' && result && (
+      {(screen === 'results' || screen === 'share') && result && (
         <ResultsScreen
           scenario={scenario}
           items={items}

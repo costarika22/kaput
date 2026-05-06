@@ -13,15 +13,34 @@ export default function InputScreen({ scenario, onSubmit, onBack }: InputScreenP
   const [item1, setItem1] = useState('');
   const [item2, setItem2] = useState('');
   const [item3, setItem3] = useState('');
-  const [touched, setTouched] = useState(false);
 
   const valid = item1.trim().length > 0 && item2.trim().length > 0 && item3.trim().length > 0;
 
   function handleSubmit() {
-    setTouched(true);
     if (!valid) return;
     onSubmit([item1.trim(), item2.trim(), item3.trim()]);
   }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '16px',
+    background: '#ffffff',
+    border: '1px solid #d0d0d0',
+    borderRadius: '8px',
+    fontFamily: 'var(--font-fira), monospace',
+    fontSize: '16px',
+    color: '#0a0a0a',
+    outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-fira), monospace',
+    fontSize: '13px',
+    color: '#6a8a9a',
+    display: 'block',
+    marginBottom: '8px',
+  };
 
   return (
     <div
@@ -30,74 +49,119 @@ export default function InputScreen({ scenario, onSubmit, onBack }: InputScreenP
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
       }}
     >
-      {/* Header */}
-      <div className="px-5 pt-5 pb-3 flex items-center gap-3">
-        <button
-          onClick={onBack}
-          className="text-white/60 hover:text-white transition-colors text-sm font-bold flex items-center gap-1"
+      {/* Scenario name at top */}
+      <div className="pt-16 px-6 text-center">
+        <h2
+          style={{
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '32px',
+            fontWeight: 900,
+            color: '#0a0a0a',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            margin: 0,
+          }}
         >
-          ← Back
-        </button>
-        <div className="flex-1" />
+          {scenario.name}
+        </h2>
+
+        <p
+          style={{
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '17px',
+            fontWeight: 700,
+            color: '#0a0a0a',
+            marginTop: '16px',
+            lineHeight: 1.4,
+          }}
+        >
+          Choose 3 items to maximize how long you survive!
+        </p>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-10">
-        {/* Scenario reminder */}
-        <div className="text-center mb-8 max-w-sm">
-          <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-1">Surviving</p>
-          <h2 className="text-white font-black text-2xl md:text-3xl">{scenario.name}</h2>
+      {/* Item inputs */}
+      <div className="flex-1 flex flex-col justify-center px-6 gap-6 py-8">
+        <div>
+          <label style={labelStyle}>Item 1</label>
+          <input
+            type="text"
+            value={item1}
+            onChange={(e) => setItem1(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            placeholder="Enter"
+            autoComplete="off"
+            style={inputStyle}
+          />
         </div>
 
-        {/* Input card */}
-        <div
-          className="w-full max-w-sm rounded-2xl p-6 border border-white/20 shadow-2xl"
-          style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
+        <div>
+          <label style={labelStyle}>Item 2</label>
+          <input
+            type="text"
+            value={item2}
+            onChange={(e) => setItem2(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            placeholder="Enter"
+            autoComplete="off"
+            style={inputStyle}
+          />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Item 3</label>
+          <input
+            type="text"
+            value={item3}
+            onChange={(e) => setItem3(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            placeholder="Enter"
+            autoComplete="off"
+            style={inputStyle}
+          />
+        </div>
+      </div>
+
+      {/* Bottom actions */}
+      <div className="px-5 pb-8 flex flex-col gap-4">
+        <button
+          onClick={handleSubmit}
+          disabled={!valid}
+          style={{
+            width: '100%',
+            padding: '18px',
+            background: valid ? '#0a0a0a' : '#d0d0d0',
+            color: valid ? '#ffffff' : '#888888',
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '16px',
+            fontWeight: 700,
+            letterSpacing: '3px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: valid ? 'pointer' : 'not-allowed',
+            textTransform: 'uppercase',
+          }}
         >
-          <p className="text-white/70 text-sm mb-5 leading-relaxed">
-            Choose 3 items you would bring to survive. Be strategic — or creative. The monkey will judge you either way.
-          </p>
+          Judge Me
+        </button>
 
-          <div className="space-y-4">
-            {[
-              { label: 'Item 1', value: item1, set: setItem1 },
-              { label: 'Item 2', value: item2, set: setItem2 },
-              { label: 'Item 3', value: item3, set: setItem3 },
-            ].map(({ label, value, set }) => (
-              <div key={label}>
-                <label className="text-white/60 text-xs uppercase tracking-widest font-semibold block mb-1.5">
-                  {label}
-                </label>
-                <input
-                  type="text"
-                  value={value}
-                  onChange={(e) => set(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  className={`w-full bg-white/10 text-white border rounded-xl px-4 py-3 text-base font-medium outline-none transition-all focus:bg-white/15 ${
-                    touched && value.trim().length === 0
-                      ? 'border-red-400/60 focus:border-red-400'
-                      : 'border-white/20 focus:border-white/50'
-                  }`}
-                  autoComplete="off"
-                />
-                {touched && value.trim().length === 0 && (
-                  <p className="text-red-400 text-xs mt-1">Required</p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            className="mt-6 w-full py-4 rounded-2xl font-black text-lg shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-95"
-            style={{
-              background: valid ? scenario.accentColor : 'rgba(255,255,255,0.15)',
-              color: '#fff',
-              boxShadow: valid ? `0 6px 24px ${scenario.accentColor}55` : 'none',
-            }}
-          >
-            Judge Me →
-          </button>
-        </div>
+        <button
+          onClick={onBack}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '14px',
+            fontWeight: 600,
+            letterSpacing: '2px',
+            color: '#0a0a0a',
+            cursor: 'pointer',
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            padding: '4px',
+          }}
+        >
+          Back
+        </button>
       </div>
     </div>
   );

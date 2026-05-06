@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Scenario, LeaderboardEntry } from '@/types';
-import { setUsername } from '@/lib/username';
+import { useState } from 'react';
+import { Scenario } from '@/types';
 
 interface LandingScreenProps {
   scenario: Scenario;
@@ -14,127 +13,213 @@ interface LandingScreenProps {
 export default function LandingScreen({ scenario, username, onUsernameChange, onStart }: LandingScreenProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(username);
-  const [topScore, setTopScore] = useState<LeaderboardEntry | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [usernameError, setUsernameError] = useState('');
+  const [checking, setChecking] = useState(false);
 
-  useEffect(() => {
-    async function fetchTop() {
-      try {
-        const res = await fetch('/api/leaderboard');
-        const data = await res.json();
-        if (data.entries && data.entries.length > 0) {
-          setTopScore(data.entries[0]);
-        }
-      } catch {
-        // leaderboard unavailable — no problem
-      } finally {
-        setLoading(false);
+  function startEdit() {
+    setEditValue(username);
+    setUsernameError('');
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    const trimmed = editValue.trim().toUpperCase();
+    if (!trimmed || trimmed === username) {
+      setEditing(false);
+      return;
+    }
+
+    setChecking(true);
+    setUsernameError('');
+
+    try {
+      const res = await fetch('/api/leaderboard');
+      const data = await res.json();
+      const entries: { username: string }[] = data.entries ?? [];
+      const taken = entries.some(
+        (e) => e.username.toLowerCase() === trimmed.toLowerCase()
+      );
+
+      if (taken) {
+        setUsernameError('Username is taken');
+        setChecking(false);
+        return;
       }
-    }
-    fetchTop();
-  }, []);
 
-  function handleEditSave() {
-    const trimmed = editValue.trim();
-    if (trimmed.length > 0 && trimmed.length <= 24) {
-      setUsername(trimmed);
       onUsernameChange(trimmed);
+      setEditing(false);
+    } catch {
+      onUsernameChange(trimmed);
+      setEditing(false);
+    } finally {
+      setChecking(false);
     }
-    setEditing(false);
   }
 
   return (
     <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
+      className="min-h-screen flex flex-col"
       style={{
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
       }}
     >
-      {/* Username top right */}
-      <div className="absolute top-4 right-4 z-10">
-        {editing ? (
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleEditSave()}
-              maxLength={24}
-              autoFocus
-              className="bg-black/30 text-white border border-white/40 rounded-lg px-3 py-1 text-sm font-bold outline-none w-36"
-            />
-            <button
-              onClick={handleEditSave}
-              className="text-white/80 text-sm hover:text-white transition-colors font-bold"
-            >
-              Save
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => { setEditValue(username); setEditing(true); }}
-            className="flex items-center gap-1.5 bg-black/25 rounded-xl px-3 py-1.5 hover:bg-black/35 transition-all"
-          >
-            <span className="text-white font-bold text-sm">{username}</span>
-            <span className="text-white/60 text-xs">✎</span>
-          </button>
-        )}
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8 text-center">
-        {/* Game title */}
-        <div className="mb-2">
-          <h1 className="text-8xl md:text-9xl" style={{ fontFamily: 'var(--font-bangers), Impact, sans-serif', letterSpacing: '2px', color: scenario.accentColor, textShadow: '4px 4px 0 rgba(0,0,0,0.3)' }}>
-            KAPUT
-          </h1>
-          <p className="text-white/60 text-sm font-medium tracking-widest uppercase mt-1">Daily Survival Game</p>
-        </div>
-
-        {/* Scenario card */}
-        <div className="mt-8 max-w-md w-full">
-          <div
-            className="rounded-2xl p-6 border border-white/20 shadow-2xl"
-            style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}
-          >
-            <p className="text-white/60 text-xs uppercase tracking-widest font-semibold mb-2">Today&apos;s Scenario</p>
-            <h2 className="text-white font-black text-3xl md:text-4xl mb-3 leading-tight">{scenario.name}</h2>
-            <p className="text-white/75 text-sm leading-relaxed">{scenario.description}</p>
-          </div>
-        </div>
-
-        {/* Top score competitive pressure */}
-        <div className="mt-5 max-w-md w-full">
-          {!loading && topScore ? (
-            <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 border border-white/15"
-              style={{ background: 'rgba(0,0,0,0.2)' }}>
-              <span className="text-yellow-400 text-lg">👑</span>
-              <span className="text-white/70 text-sm">
-                <span className="font-bold text-white">{topScore.username}</span> is leading with{' '}
-                <span className="font-bold text-yellow-300">{topScore.score} days</span>
-              </span>
-            </div>
-          ) : !loading ? (
-            <div className="text-white/40 text-sm text-center">No scores yet today. Be the first.</div>
-          ) : null}
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={onStart}
-          className="mt-8 px-10 py-5 rounded-2xl font-black text-xl shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95"
+      {/* Main content area — vertically centered */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <p
           style={{
-            background: scenario.accentColor,
-            color: '#fff',
-            boxShadow: `0 8px 32px ${scenario.accentColor}66`,
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '13px',
+            letterSpacing: '3px',
+            color: '#6a8a9a',
+            marginBottom: '12px',
+            textTransform: 'uppercase',
           }}
         >
-          Pick Your Items →
+          Today&apos;s Challenge:
+        </p>
+
+        <h2
+          style={{
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '40px',
+            fontWeight: 900,
+            color: '#0a0a0a',
+            letterSpacing: '2px',
+            lineHeight: 1.1,
+            marginBottom: '20px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {scenario.name}
+        </h2>
+
+        <p
+          style={{
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '16px',
+            color: '#2a2a2a',
+            lineHeight: 1.6,
+            maxWidth: '340px',
+            textAlign: 'center',
+          }}
+        >
+          {scenario.description}
+        </p>
+      </div>
+
+      {/* Bottom actions */}
+      <div className="px-5 pb-8 flex flex-col gap-3">
+        {/* PLAY button */}
+        <button
+          onClick={onStart}
+          style={{
+            width: '100%',
+            padding: '18px',
+            background: '#0a0a0a',
+            color: '#ffffff',
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '16px',
+            fontWeight: 700,
+            letterSpacing: '3px',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            textTransform: 'uppercase',
+          }}
+        >
+          Play
         </button>
 
-        <p className="mt-4 text-white/40 text-xs">
-          Pick 3 items. Get judged by a monkey. Try to survive.
-        </p>
+        {/* Username area */}
+        <div>
+          {editing ? (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editValue}
+                  onChange={(e) => {
+                    setEditValue(e.target.value.toUpperCase());
+                    setUsernameError('');
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                  maxLength={24}
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    padding: '14px 16px',
+                    background: '#ffffff',
+                    border: '1px solid #d0d0d0',
+                    borderRadius: '8px',
+                    fontFamily: 'var(--font-fira), monospace',
+                    fontSize: '16px',
+                    fontWeight: 500,
+                    color: '#0a0a0a',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleSave}
+                  disabled={checking}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: '#ffffff',
+                    border: '1px solid #d0d0d0',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    color: '#22a84a',
+                    flexShrink: 0,
+                  }}
+                >
+                  ✓
+                </button>
+              </div>
+              {usernameError && (
+                <p
+                  style={{
+                    fontFamily: 'var(--font-fira), monospace',
+                    fontSize: '13px',
+                    color: '#cc2020',
+                    paddingLeft: '4px',
+                  }}
+                >
+                  {usernameError}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div
+              onClick={startEdit}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                background: '#ffffff',
+                border: '1px solid #d0d0d0',
+                borderRadius: '8px',
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-fira), monospace',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  color: '#0a0a0a',
+                }}
+              >
+                {username}
+              </span>
+              <span style={{ color: '#888888', fontSize: '16px' }}>✎</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

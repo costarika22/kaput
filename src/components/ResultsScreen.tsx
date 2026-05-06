@@ -13,6 +13,16 @@ interface ResultsScreenProps {
   onShare: () => void;
 }
 
+function article(name: string): string {
+  return /^[aeiou]/i.test(name) ? 'AN' : 'A';
+}
+
+function scoreBarColor(score: number): string {
+  if (score >= 70) return '#22c55e';
+  if (score >= 40) return '#eab308';
+  return '#ef4444';
+}
+
 export default function ResultsScreen({
   scenario,
   items,
@@ -25,6 +35,7 @@ export default function ResultsScreen({
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [lbLoading, setLbLoading] = useState(true);
+  const [lbOpen, setLbOpen] = useState(false);
   const mood: MonkeyMood = getMoodFromScore(result.daysTotal);
   const hasAnimated = useRef(false);
 
@@ -49,10 +60,10 @@ export default function ResultsScreen({
   useEffect(() => {
     async function fetchLb() {
       try {
-        const res = await fetch('/api/leaderboard');
+        const res = await fetch(`/api/leaderboard?username=${encodeURIComponent(username)}`);
         const data = await res.json();
         setLeaderboard(data.entries || []);
-        setPlayerRank(data.playerRank || null);
+        setPlayerRank(data.playerRank ?? null);
       } catch {
         // silent
       } finally {
@@ -60,186 +71,244 @@ export default function ResultsScreen({
       }
     }
     fetchLb();
-  }, []);
+  }, [username]);
 
-  const moodLabel: Record<MonkeyMood, string> = {
-    devastated: 'Devastated',
-    disappointed: 'Disappointed',
-    neutral: 'Neutral',
-    impressed: 'Impressed',
-    euphoric: 'Euphoric',
+  const verdictTwoSentences = result.verdict
+    .split(/(?<=[.!?])\s+/)
+    .slice(0, 2)
+    .join(' ');
+
+  const labelStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-fira), monospace',
+    fontSize: '13px',
+    color: '#4a4a4a',
+  };
+
+  const sectionHeadStyle: React.CSSProperties = {
+    fontFamily: 'var(--font-fira), monospace',
+    fontSize: '14px',
+    fontWeight: 700,
+    color: '#0a0a0a',
+    letterSpacing: '2px',
+    textTransform: 'uppercase',
+    marginBottom: '12px',
   };
 
   return (
     <div
-      className="min-h-screen flex flex-col"
       style={{
+        minHeight: '100svh',
+        display: 'flex',
+        flexDirection: 'column',
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
+        fontFamily: 'var(--font-fira), monospace',
       }}
     >
-      <div className="flex-1 flex flex-col items-center px-5 pt-8 pb-10">
-        {/* Scenario label */}
-        <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-6">
-          {scenario.name}
-        </p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '48px 20px 24px' }}>
 
-        {/* Monkey */}
-        <div className="relative">
-          <MonkeyExpression mood={mood} size={160} />
-          <div
-            className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-xs font-bold"
-            style={{ background: scenario.accentColor, color: '#fff' }}
-          >
-            {moodLabel[mood]}
-          </div>
-        </div>
-
-        {/* Score */}
-        <div className="mt-8 text-center">
-          <p className="text-white/60 text-sm font-medium mb-1">You would survive</p>
+        {/* Score header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <p style={{ fontSize: '13px', letterSpacing: '3px', color: '#6a8a9a', textTransform: 'uppercase', marginBottom: '4px' }}>
+            You would survive
+          </p>
           <p
-            className="font-black text-7xl md:text-8xl tabular-nums"
-            style={{ color: '#fff', textShadow: `0 0 40px ${scenario.accentColor}99` }}
+            className="score-reveal"
+            style={{ fontSize: '72px', fontWeight: 900, color: '#0a0a0a', lineHeight: 1, letterSpacing: '-2px' }}
           >
-            {displayDays}
+            {displayDays} <span style={{ fontSize: '40px', letterSpacing: '0px' }}>Days</span>
           </p>
-          <p className="text-white/80 text-lg font-bold mt-1">
-            days in a <span style={{ color: scenario.accentColor }}>{scenario.name}</span>
+          <p style={{ fontSize: '13px', letterSpacing: '3px', color: '#6a8a9a', textTransform: 'uppercase', marginTop: '4px' }}>
+            {article(scenario.name)} {scenario.name}
           </p>
         </div>
 
-        {/* Verdict */}
-        <div
-          className="mt-6 max-w-sm w-full rounded-2xl px-5 py-4 border border-white/20"
-          style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)' }}
-        >
-          <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-2">The Monkey&apos;s Verdict</p>
-          <p className="text-white text-sm leading-relaxed italic">&ldquo;{result.verdict}&rdquo;</p>
+        {/* Monkey + Verdict side by side */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '32px' }}>
+          <div style={{ flexShrink: 0 }}>
+            <MonkeyExpression mood={mood} size={100} />
+          </div>
+          <p
+            style={{
+              fontFamily: 'var(--font-fira), monospace',
+              fontSize: '14px',
+              fontStyle: 'italic',
+              color: '#2a2a2a',
+              lineHeight: 1.5,
+              flex: 1,
+              paddingTop: '8px',
+            }}
+          >
+            &ldquo;{verdictTwoSentences}&rdquo;
+          </p>
         </div>
 
-        {/* Item scores */}
-        <div
-          className="mt-4 max-w-sm w-full rounded-2xl px-5 py-4 border border-white/15"
-          style={{ background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(8px)' }}
-        >
-          <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-3">Item Ratings</p>
-          <div className="space-y-2">
+        {/* Item Ratings */}
+        <div style={{ marginBottom: '16px' }}>
+          <p style={sectionHeadStyle}>Item Ratings</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {items.map((item, idx) => {
-              const score = result.itemScores[idx];
+              const score = Math.round(result.itemScores[idx]);
+              const color = scoreBarColor(score);
               return (
-                <div key={idx} className="flex items-center gap-3">
-                  <span className="text-white/70 text-sm flex-1 truncate">{item}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 h-1.5 rounded-full bg-white/10">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${score}%`,
-                          background: score >= 70 ? '#4ade80' : score >= 40 ? '#facc15' : '#f87171',
-                        }}
-                      />
-                    </div>
-                    <span className="text-white font-bold text-sm w-7 text-right">{score}</span>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ ...labelStyle, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item}
+                  </span>
+                  <div style={{ width: '120px', height: '6px', background: '#d0d0d0', borderRadius: '3px', flexShrink: 0 }}>
+                    <div style={{ width: `${score}%`, height: '100%', background: color, borderRadius: '3px', transition: 'width 0.8s ease' }} />
                   </div>
+                  <span style={{ ...labelStyle, fontWeight: 700, width: '24px', textAlign: 'right', flexShrink: 0 }}>{score}</span>
                 </div>
               );
             })}
+
+            {/* Combo bonus */}
+            {result.comboBonus && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ ...labelStyle, flex: 1 }}>Killer combo</span>
+                <span style={{ fontFamily: 'var(--font-fira), monospace', fontSize: '13px', fontWeight: 700, color: '#16a34a' }}>+ 20 days</span>
+              </div>
+            )}
+
+            {/* Replay penalty */}
+            {result.penaltyApplied && result.penaltyLabel && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ ...labelStyle, flex: 1 }}>Replay penalty</span>
+                <span style={{ fontFamily: 'var(--font-fira), monospace', fontSize: '13px', fontWeight: 700, color: '#dc2626' }}>
+                  {result.penaltyLabel}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Combo bonus */}
-        {result.comboBonus && (
-          <div
-            className="mt-3 max-w-sm w-full rounded-xl px-4 py-2.5 border border-green-400/40 bg-green-500/20 flex items-center gap-2"
+        {/* Leaderboard (collapsible) */}
+        <div style={{ marginBottom: '24px' }}>
+          <button
+            onClick={() => setLbOpen((o) => !o)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'none',
+              border: 'none',
+              borderBottom: '1px solid #b0b0b0',
+              padding: '8px 0',
+              cursor: 'pointer',
+            }}
           >
-            <span className="text-green-400 text-lg">✦</span>
-            <div>
-              <p className="text-green-300 font-bold text-sm">Combo Bonus +20 days</p>
-              <p className="text-green-400/70 text-xs">Your items cover 3+ survival categories</p>
-            </div>
-          </div>
-        )}
+            <span style={sectionHeadStyle}>Today&apos;s Leaderboard</span>
+            <span style={{ fontSize: '18px', color: '#4a4a4a', transform: lbOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              &#8964;
+            </span>
+          </button>
 
-        {/* Replay penalty */}
-        {result.penaltyApplied && result.penaltyLabel && (
-          <div
-            className="mt-3 max-w-sm w-full rounded-xl px-4 py-2.5 border border-red-400/40 bg-red-500/20 flex items-center gap-2"
-          >
-            <span className="text-red-400 text-lg">⚠</span>
-            <div>
-              <p className="text-red-300 font-bold text-sm">{result.penaltyLabel}</p>
-              <p className="text-red-400/70 text-xs">Score reduced for repeated attempts</p>
-            </div>
-          </div>
-        )}
-
-        {/* Leaderboard */}
-        <div
-          className="mt-6 max-w-sm w-full rounded-2xl px-5 py-4 border border-white/15"
-          style={{ background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(8px)' }}
-        >
-          <p className="text-white/50 text-xs uppercase tracking-widest font-semibold mb-3">Today&apos;s Leaderboard</p>
-          {lbLoading ? (
-            <p className="text-white/30 text-sm text-center py-2">Loading...</p>
-          ) : leaderboard.length === 0 ? (
-            <p className="text-white/30 text-sm text-center py-2">No scores yet.</p>
-          ) : (
-            <div className="space-y-1.5">
-              {leaderboard.slice(0, 10).map((entry, idx) => (
-                <div
-                  key={entry.id}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg ${entry.username === username ? 'border border-white/30' : ''}`}
-                  style={{
-                    background: entry.username === username ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)',
-                  }}
-                >
-                  <span className="text-white/40 text-xs font-bold w-5 text-center">
-                    {idx === 0 ? '👑' : `#${idx + 1}`}
-                  </span>
-                  <span className="text-white text-sm flex-1 truncate font-medium">{entry.username}</span>
-                  <span className="text-white font-black text-sm">{entry.score}</span>
-                  <span className="text-white/40 text-xs">days</span>
+          {lbOpen && (
+            <div style={{ marginTop: '12px' }}>
+              {lbLoading ? (
+                <p style={{ ...labelStyle, textAlign: 'center', padding: '8px 0' }}>Loading...</p>
+              ) : leaderboard.length === 0 ? (
+                <p style={{ ...labelStyle, textAlign: 'center', padding: '8px 0' }}>No scores yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {leaderboard.slice(0, 10).map((entry, idx) => (
+                    <div
+                      key={entry.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        background: entry.username === username ? 'rgba(0,0,0,0.08)' : 'transparent',
+                        fontFamily: 'var(--font-fira), monospace',
+                        fontSize: '13px',
+                      }}
+                    >
+                      <span style={{ color: '#6a6a6a', width: '24px', textAlign: 'center', flexShrink: 0 }}>
+                        #{idx + 1}
+                      </span>
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0a0a0a' }}>
+                        {entry.username}
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#0a0a0a' }}>{Math.round(entry.score)}</span>
+                      <span style={{ color: '#6a6a6a' }}>days</span>
+                    </div>
+                  ))}
+                  {playerRank !== null && playerRank > 10 && (
+                    <>
+                      <div style={{ textAlign: 'center', color: '#6a6a6a', fontSize: '12px', padding: '2px 0' }}>···</div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '8px 10px',
+                          borderRadius: '6px',
+                          background: 'rgba(0,0,0,0.08)',
+                          fontFamily: 'var(--font-fira), monospace',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <span style={{ color: '#6a6a6a', width: '24px', textAlign: 'center', flexShrink: 0 }}>#{playerRank}</span>
+                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0a0a0a' }}>{username}</span>
+                        <span style={{ fontWeight: 700, color: '#0a0a0a' }}>{Math.round(result.daysTotal)}</span>
+                        <span style={{ color: '#6a6a6a' }}>days</span>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ))}
-              {playerRank && playerRank > 10 && (
-                <>
-                  <div className="text-center text-white/30 text-xs py-1">···</div>
-                  <div
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg border border-white/30"
-                    style={{ background: 'rgba(255,255,255,0.12)' }}
-                  >
-                    <span className="text-white/40 text-xs font-bold w-5 text-center">#{playerRank}</span>
-                    <span className="text-white text-sm flex-1 truncate font-medium">{username}</span>
-                    <span className="text-white font-black text-sm">{result.daysTotal}</span>
-                    <span className="text-white/40 text-xs">days</span>
-                  </div>
-                </>
               )}
             </div>
           )}
         </div>
 
         {/* Action buttons */}
-        <div className="mt-6 max-w-sm w-full flex gap-3">
+        <div style={{ display: 'flex', gap: '12px' }}>
           <button
             onClick={onTryAgain}
-            className="flex-1 py-4 rounded-2xl font-bold text-base border border-white/25 text-white transition-all hover:bg-white/10 active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.08)' }}
+            style={{
+              flex: 1,
+              padding: '18px',
+              background: '#0a0a0a',
+              color: '#ffffff',
+              fontFamily: 'var(--font-fira), monospace',
+              fontSize: '14px',
+              fontWeight: 700,
+              letterSpacing: '2px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
           >
-            Try Again
+            Play Again
           </button>
           <button
             onClick={onShare}
-            className="flex-1 py-4 rounded-2xl font-black text-base shadow-xl transition-all hover:scale-[1.02] active:scale-95"
             style={{
-              background: scenario.accentColor,
-              color: '#fff',
-              boxShadow: `0 6px 20px ${scenario.accentColor}55`,
+              width: '56px',
+              height: '56px',
+              background: '#ffffff',
+              border: '1px solid #d0d0d0',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
+            aria-label="Share"
           >
-            Share →
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
           </button>
         </div>
+
       </div>
     </div>
   );

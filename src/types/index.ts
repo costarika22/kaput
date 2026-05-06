@@ -29,4 +29,4 @@ export interface LeaderboardEntry {
   created_at: string;
 }
 
-export type Screen = 'landing' | 'input' | 'loading' | 'results' | 'share';
+export type Screen = 'splash' | 'landing' | 'input' | 'loading' | 'results' | 'share';

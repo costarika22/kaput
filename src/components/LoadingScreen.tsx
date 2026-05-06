@@ -1,98 +1,102 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Scenario } from '@/types';
+import { Scenario, MonkeyMood } from '@/types';
 import MonkeyExpression from './MonkeyExpression';
-import { MonkeyMood } from '@/types';
+
+const FLINCH_MOODS: MonkeyMood[] = ['devastated', 'disappointed', 'neutral', 'impressed', 'euphoric'];
 
 interface LoadingScreenProps {
   scenario: Scenario;
 }
 
-const FLINCH_MOODS: MonkeyMood[] = ['devastated', 'disappointed', 'neutral', 'impressed', 'euphoric'];
-
-const FLINCH_TEXTS = [
-  '...',
-  'Hmm.',
-  'Interesting.',
-  'I see.',
-  'Really.',
-  'I am processing.',
-  'Do not do that again.',
-  'Noted.',
-];
-
 export default function LoadingScreen({ scenario }: LoadingScreenProps) {
   const [flinchCount, setFlinchCount] = useState(0);
   const [currentMood, setCurrentMood] = useState<MonkeyMood>('neutral');
-  const [flinchText, setFlinchText] = useState('The monkey is judging your choices...');
   const [bouncing, setBouncing] = useState(false);
 
   const handleMonkeyClick = useCallback(() => {
     const newCount = flinchCount + 1;
     setFlinchCount(newCount);
-    const mood = FLINCH_MOODS[newCount % FLINCH_MOODS.length];
-    setCurrentMood(mood);
-    setFlinchText(FLINCH_TEXTS[newCount % FLINCH_TEXTS.length]);
+    setCurrentMood(FLINCH_MOODS[newCount % FLINCH_MOODS.length]);
     setBouncing(true);
     setTimeout(() => setBouncing(false), 300);
   }, [flinchCount]);
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
       style={{
+        minHeight: '100svh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
       }}
     >
-      <p className="text-white/60 text-xs uppercase tracking-widest font-semibold mb-8">
-        {scenario.name}
-      </p>
+      <div style={{ flex: 1 }} />
 
-      {/* Monkey with click interaction */}
+      {/* Monkey */}
       <div
         onClick={handleMonkeyClick}
-        className="cursor-pointer select-none relative"
+        role="button"
+        aria-label="Tap Kaput"
         style={{
+          cursor: 'pointer',
+          userSelect: 'none',
           transform: bouncing ? 'scale(0.88) rotate(-8deg)' : 'scale(1) rotate(0deg)',
           transition: 'transform 0.15s cubic-bezier(0.34,1.56,0.64,1)',
         }}
-        title="Tap the monkey"
-        role="button"
-        aria-label="Tap the monkey"
       >
-        {/* Idle float animation via inline keyframes in globals */}
         <div className="monkey-idle">
-          <MonkeyExpression mood={currentMood} size={220} />
+          <MonkeyExpression mood={currentMood} size={240} />
         </div>
-        {flinchCount > 0 && (
-          <div
-            className="absolute -top-2 -right-4 bg-black/60 text-white text-xs px-2 py-1 rounded-lg border border-white/20"
-            style={{ backdropFilter: 'blur(4px)' }}
-          >
-            {FLINCH_TEXTS[flinchCount % FLINCH_TEXTS.length]}
-          </div>
-        )}
       </div>
 
-      {/* Tap hint */}
-      <p className="mt-2 text-white/35 text-xs">
-        {flinchCount === 0 ? 'tap the monkey' : `${flinchCount} tap${flinchCount > 1 ? 's' : ''}`}
+      {/* TAP ON KAPUT */}
+      <p
+        style={{
+          fontFamily: 'var(--font-fira), monospace',
+          fontSize: '12px',
+          letterSpacing: '3px',
+          color: '#6a8a9a',
+          marginTop: '16px',
+          textTransform: 'uppercase',
+        }}
+      >
+        Tap on Kaput
       </p>
 
-      {/* Status text */}
-      <p className="mt-6 text-white font-bold text-xl max-w-xs">
-        {flinchText}
+      <div style={{ flex: 2 }} />
+
+      {/* KAPUT IS JUDGING YOU */}
+      <p
+        style={{
+          fontFamily: 'var(--font-fira), monospace',
+          fontSize: '18px',
+          fontWeight: 700,
+          color: '#0a0a0a',
+          textAlign: 'center',
+          padding: '0 36px',
+          letterSpacing: '1px',
+          textTransform: 'uppercase',
+          lineHeight: 1.4,
+        }}
+      >
+        Kaput is judging you... I would be worried.
       </p>
 
-      {/* Animated dots */}
-      <div className="mt-4 flex gap-2">
+      {/* Pulsing dots */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '24px', paddingBottom: '48px' }}>
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="w-2.5 h-2.5 rounded-full bg-white/40"
             style={{
-              animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: '#6a8a9a',
+              animation: 'bounce 1.2s ease-in-out infinite',
+              animationDelay: `${i * 0.2}s`,
             }}
           />
         ))}
