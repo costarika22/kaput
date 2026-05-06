@@ -72,10 +72,11 @@ h1.kaput-title {
   letter-spacing: -2px;
 }
 
-/* Animated gradient background — filter-based so it works at any scroll height */
+/* Animated gradient background — filter-based so it works at any scroll height.
+   Base saturation is 1.15 so the gradient reads as vivid/warm even at rest. */
 @keyframes gradientPulse {
-  0%, 100% { filter: saturate(1) brightness(1); }
-  50% { filter: saturate(1.12) brightness(1.03); }
+  0%, 100% { filter: saturate(1.15) brightness(1); }
+  50% { filter: saturate(1.28) brightness(1.03); }
 }
 
 .animated-gradient {

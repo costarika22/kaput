@@ -113,16 +113,16 @@ export default function ResultsScreen({
     >
       <div
         style={{
-          maxWidth: '780px',
+          maxWidth: '480px',
           margin: '0 auto',
-          padding: '64px 20px 40px',
+          padding: '52px 24px 40px',
           display: 'flex',
           flexDirection: 'column',
         }}
       >
-        {/* Score header */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <p style={{ fontSize: '13px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginBottom: '4px' }}>
+        {/* Score header — centered */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <p style={{ fontSize: '12px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginBottom: '4px' }}>
             You would survive
           </p>
           <p
@@ -131,31 +131,32 @@ export default function ResultsScreen({
           >
             {displayDays} DAYS
           </p>
-          <p style={{ fontSize: '13px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginTop: '4px' }}>
+          <p style={{ fontSize: '12px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginTop: '6px' }}>
             {article(scenario.name)} {scenario.name}
           </p>
         </div>
 
-        {/* Monkey + Verdict — centered, monkey above quote */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <MonkeyExpression mood={mood} size={110} />
-          <p
-            style={{
-              fontFamily: 'var(--font-fira), monospace',
-              fontSize: '15px',
-              fontStyle: 'italic',
-              color: '#2a2a2a',
-              lineHeight: 1.6,
-              marginTop: '12px',
-              padding: '0 4px',
-            }}
-          >
-            &ldquo;{verdictTwoSentences}&rdquo;
-          </p>
+        {/* Monkey — left-aligned, 120px */}
+        <div style={{ marginBottom: '16px' }}>
+          <MonkeyExpression mood={mood} size={120} />
         </div>
 
+        {/* Verdict — full-width italic, plain on background */}
+        <p
+          style={{
+            fontFamily: 'var(--font-fira), monospace',
+            fontSize: '15px',
+            fontStyle: 'italic',
+            color: '#2a2a2a',
+            lineHeight: 1.6,
+            marginBottom: '28px',
+          }}
+        >
+          &ldquo;{verdictTwoSentences}&rdquo;
+        </p>
+
         {/* Item Ratings */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '16px' }}>
           <p style={sectionHeadStyle}>Item Ratings</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {items.map((item, idx) => {
