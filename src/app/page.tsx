@@ -29,6 +29,11 @@ export default function GamePage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Reset scroll position on every screen transition
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
+
   function handleUsernameChange(name: string) {
     saveUsername(name);
     setUsernameState(name);
@@ -100,7 +105,7 @@ export default function GamePage() {
         </div>
       )}
 
-      {screen === 'splash' && <SplashScreen />}
+      {screen === 'splash' && <SplashScreen scenario={scenario} />}
 
       {screen === 'landing' && (
         <LandingScreen
@@ -131,6 +136,7 @@ export default function GamePage() {
           username={username}
           onTryAgain={() => { setResult(null); setScreen('input'); }}
           onShare={() => setScreen('share')}
+          sharingActive={screen === 'share'}
         />
       )}
 

@@ -11,6 +11,7 @@ interface ResultsScreenProps {
   username: string;
   onTryAgain: () => void;
   onShare: () => void;
+  sharingActive?: boolean;
 }
 
 function article(name: string): string {
@@ -30,6 +31,7 @@ export default function ResultsScreen({
   username,
   onTryAgain,
   onShare,
+  sharingActive = false,
 }: ResultsScreenProps) {
   const [displayDays, setDisplayDays] = useState(0);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -103,9 +105,8 @@ export default function ResultsScreen({
 
   return (
     <div
-      className="animated-gradient"
+      className="min-h-screen animated-gradient"
       style={{
-        minHeight: '100svh',
         background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
         fontFamily: 'var(--font-fira), monospace',
       }}
@@ -135,30 +136,18 @@ export default function ResultsScreen({
           </p>
         </div>
 
-        {/* Monkey + Verdict */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '20px',
-            marginBottom: '32px',
-            background: 'rgba(255,255,255,0.45)',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
-          <div style={{ flexShrink: 0 }}>
-            <MonkeyExpression mood={mood} size={100} />
-          </div>
+        {/* Monkey + Verdict — centered, monkey above quote */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <MonkeyExpression mood={mood} size={110} />
           <p
             style={{
               fontFamily: 'var(--font-fira), monospace',
-              fontSize: '14px',
+              fontSize: '15px',
               fontStyle: 'italic',
               color: '#2a2a2a',
               lineHeight: 1.6,
-              flex: 1,
-              paddingTop: '8px',
+              marginTop: '12px',
+              padding: '0 4px',
             }}
           >
             &ldquo;{verdictTwoSentences}&rdquo;
@@ -166,14 +155,7 @@ export default function ResultsScreen({
         </div>
 
         {/* Item Ratings */}
-        <div
-          style={{
-            marginBottom: '20px',
-            background: 'rgba(255,255,255,0.45)',
-            borderRadius: '12px',
-            padding: '20px',
-          }}
-        >
+        <div style={{ marginBottom: '20px' }}>
           <p style={sectionHeadStyle}>Item Ratings</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {items.map((item, idx) => {
@@ -249,7 +231,7 @@ export default function ResultsScreen({
                 <p style={{ ...labelStyle, textAlign: 'center', padding: '8px 0' }}>No scores yet.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {leaderboard.slice(0, 10).map((entry, idx) => (
+                  {leaderboard.slice(0, 3).map((entry, idx) => (
                     <div
                       key={entry.id}
                       style={{
@@ -273,7 +255,7 @@ export default function ResultsScreen({
                       <span style={{ color: '#6a6a6a' }}>days</span>
                     </div>
                   ))}
-                  {playerRank !== null && playerRank > 10 && (
+                  {playerRank !== null && playerRank > 3 && (
                     <>
                       <div style={{ textAlign: 'center', color: '#6a6a6a', fontSize: '12px', padding: '2px 0' }}>···</div>
                       <div
@@ -301,8 +283,8 @@ export default function ResultsScreen({
           )}
         </div>
 
-        {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '12px', maxWidth: '480px', margin: '0 auto', width: '100%' }}>
+        {/* Action buttons — hidden while share modal is open */}
+        {!sharingActive && <div style={{ display: 'flex', gap: '12px', maxWidth: '480px', margin: '0 auto', width: '100%' }}>
           <button
             onClick={onTryAgain}
             style={{
@@ -344,7 +326,7 @@ export default function ResultsScreen({
               <line x1="12" y1="2" x2="12" y2="15"/>
             </svg>
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

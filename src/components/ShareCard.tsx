@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
 import { Scenario, JudgmentResult, MonkeyMood } from '@/types';
 import { getMoodFromScore } from './MonkeyExpression';
 
@@ -27,17 +26,29 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
     import('html2canvas').catch(() => {});
   }, []);
 
+  // Reliable capture: wait for fonts, use explicit dimensions
+  async function captureCard(): Promise<HTMLCanvasElement> {
+    await document.fonts.ready;
+    const html2canvas = (await import('html2canvas')).default;
+    const el = cardRef.current!;
+    return html2canvas(el, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      scrollX: 0,
+      scrollY: 0,
+    });
+  }
+
   async function handleDownload() {
     if (!cardRef.current) return;
     setDownloading(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-      });
+      const canvas = await captureCard();
       const link = document.createElement('a');
       link.download = `kaput-${username}-${result.daysTotal}days.png`;
       link.href = canvas.toDataURL('image/png');
@@ -53,25 +64,23 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
     if (!cardRef.current) return;
     setCopying(true);
     try {
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 3,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob }),
-        ]);
-        setTimeout(() => setCopying(false), 1500);
-      });
+      const canvas = await captureCard();
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (blob) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        } catch {
+          // Image clipboard not supported — fall back to text caption
+          const caption = `I survived ${result.daysTotal} days in ${article(scenario.name)} ${scenario.name}! kaput.app`;
+          await navigator.clipboard.writeText(caption).catch(() => {});
+        }
+      }
     } catch {
-      // Fallback: copy text
-      const text = `I would survive ${result.daysTotal} days in ${article(scenario.name)} ${scenario.name}! Play at kaput.app`;
-      await navigator.clipboard.writeText(text);
-      setTimeout(() => setCopying(false), 1500);
+      // html2canvas failed — copy text only
+      const caption = `I survived ${result.daysTotal} days in ${article(scenario.name)} ${scenario.name}! kaput.app`;
+      await navigator.clipboard.writeText(caption).catch(() => {});
+    } finally {
+      setTimeout(() => setCopying(false), 2000);
     }
   }
 
@@ -110,18 +119,20 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
             textAlign: 'center',
           }}
         >
-          {/* Monkey overlapping KAPUT — same composition as splash */}
-          <div style={{ marginBottom: '-28px', zIndex: 1, position: 'relative' }}>
-            <Image
+          {/* Monkey behind KAPUT logo */}
+          {/* Use plain <img> so html2canvas captures it reliably */}
+          <div style={{ marginBottom: '-28px', zIndex: 0, position: 'relative' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={`/${mood}.png`}
               alt="Kaput"
               width={120}
               height={120}
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'contain', display: 'block' }}
             />
           </div>
 
-          {/* KAPUT logo */}
+          {/* KAPUT logo — in front of monkey */}
           <h2
             style={{
               fontFamily: 'var(--font-bangers), Impact, sans-serif',
@@ -133,7 +144,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               letterSpacing: '3px',
               margin: 0,
               position: 'relative',
-              zIndex: 0,
+              zIndex: 1,
             }}
           >
             KAPUT
@@ -145,7 +156,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               fontFamily: 'var(--font-fira), monospace',
               fontSize: '13px',
               letterSpacing: '3px',
-              color: '#4a6a7a',
+              color: 'rgba(0,0,0,0.5)',
               marginTop: '20px',
               textTransform: 'uppercase',
             }}
@@ -170,7 +181,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               fontFamily: 'var(--font-fira), monospace',
               fontSize: '13px',
               letterSpacing: '3px',
-              color: '#4a6a7a',
+              color: 'rgba(0,0,0,0.5)',
               marginTop: '6px',
               textTransform: 'uppercase',
             }}
@@ -178,14 +189,13 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
             In {article(scenario.name)} {scenario.name}
           </p>
 
-          {/* Rank */}
           {rank !== null && (
             <p
               style={{
                 fontFamily: 'var(--font-fira), monospace',
                 fontSize: '13px',
                 letterSpacing: '2px',
-                color: '#4a6a7a',
+                color: 'rgba(0,0,0,0.5)',
                 marginTop: '12px',
                 textTransform: 'uppercase',
               }}
@@ -193,9 +203,6 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               Ranked #{rank} today
             </p>
           )}
-
-          {/* URL placeholder */}
-          {/* kaput.app */}
         </div>
 
         {/* Action buttons */}
@@ -254,7 +261,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
           </button>
         </div>
 
-        {/* Play Again */}
+        {/* Close / back to results */}
         <button
           onClick={onBack}
           style={{
@@ -272,7 +279,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
             textTransform: 'uppercase',
           }}
         >
-          Play Again
+          Back
         </button>
       </div>
     </div>

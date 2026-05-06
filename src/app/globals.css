@@ -63,26 +63,30 @@ h1.kaput-title {
   letter-spacing: -2px;
 }
 
-/* Animated gradient background */
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 0%; }
-  50% { background-position: 100% 100%; }
+/* Animated gradient background — filter-based so it works at any scroll height */
+@keyframes gradientPulse {
+  0%, 100% { filter: saturate(1) brightness(1); }
+  50% { filter: saturate(1.12) brightness(1.03); }
 }
 
 .animated-gradient {
-  background-size: 200% 200%;
-  animation: gradientShift 14s ease infinite;
+  animation: gradientPulse 10s ease-in-out infinite;
+}
+
+/* Floating monkey tap reaction */
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+}
+
+.reaction-float {
+  animation: floatUp 1.1s ease-out forwards;
+  pointer-events: none;
+  user-select: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animated-gradient {
-    animation: none;
-    background-size: 100% 100%;
-  }
-  .monkey-idle {
-    animation: none;
-  }
-  .score-reveal {
-    animation: none;
-  }
+  .animated-gradient { animation: none; }
+  .monkey-idle       { animation: none; }
+  .score-reveal      { animation: none; }
 }

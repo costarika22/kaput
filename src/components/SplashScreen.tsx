@@ -1,18 +1,23 @@
 import Image from 'next/image';
+import { Scenario } from '@/types';
 
-export default function SplashScreen() {
+interface SplashScreenProps {
+  scenario: Scenario;
+}
+
+export default function SplashScreen({ scenario }: SplashScreenProps) {
   return (
     <div
       className="min-h-screen animated-gradient"
       style={{
-        background: 'linear-gradient(160deg, #b8d4e8 0%, #e8f4f8 100%)',
+        background: `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`,
       }}
     >
       <div
         style={{
           maxWidth: '480px',
           margin: '0 auto',
-          minHeight: '100svh',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -22,9 +27,9 @@ export default function SplashScreen() {
       >
         <div style={{ flex: 1 }} />
 
-        {/* Monkey + Logo composition */}
+        {/* Monkey + Logo composition: monkey behind, logo in front */}
         <div className="flex flex-col items-center">
-          <div style={{ marginBottom: '-40px', zIndex: 1, position: 'relative' }}>
+          <div style={{ marginBottom: '-40px', zIndex: 0, position: 'relative' }}>
             <Image
               src="/neutral.png"
               alt="Kaput the monkey"
@@ -46,7 +51,7 @@ export default function SplashScreen() {
               letterSpacing: '4px',
               margin: 0,
               position: 'relative',
-              zIndex: 0,
+              zIndex: 1,
             }}
           >
             KAPUT
@@ -57,7 +62,7 @@ export default function SplashScreen() {
               fontFamily: 'var(--font-fira), monospace',
               fontSize: '14px',
               letterSpacing: '4px',
-              color: '#6a8a9a',
+              color: 'rgba(0,0,0,0.4)',
               marginTop: '16px',
               textTransform: 'uppercase',
             }}
@@ -76,7 +81,7 @@ export default function SplashScreen() {
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                background: '#6a8a9a',
+                background: 'rgba(0,0,0,0.25)',
                 animation: 'bounce 1.2s ease-in-out infinite',
                 animationDelay: `${i * 0.2}s`,
               }}
