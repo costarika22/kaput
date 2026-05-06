@@ -46,7 +46,7 @@ export default function SplashScreen({ scenario }: SplashScreenProps) {
               fontSize: '120px',
               lineHeight: 1,
               color: '#0a0a0a',
-              WebkitTextStroke: '6px white',
+              WebkitTextStroke: '14px white',
               paintOrder: 'stroke fill',
               letterSpacing: '4px',
               margin: 0,

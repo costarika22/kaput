@@ -139,7 +139,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               fontSize: '64px',
               lineHeight: 1,
               color: '#0a0a0a',
-              WebkitTextStroke: '4px white',
+              WebkitTextStroke: '10px white',
               paintOrder: 'stroke fill',
               letterSpacing: '3px',
               margin: 0,

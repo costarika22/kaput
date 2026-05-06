@@ -115,7 +115,7 @@ export default function ResultsScreen({
         style={{
           maxWidth: '780px',
           margin: '0 auto',
-          padding: '48px 20px 40px',
+          padding: '64px 20px 40px',
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -129,7 +129,7 @@ export default function ResultsScreen({
             className="score-reveal"
             style={{ fontSize: '72px', fontWeight: 900, color: '#0a0a0a', lineHeight: 1, letterSpacing: '-2px' }}
           >
-            {displayDays} <span style={{ fontSize: '40px', letterSpacing: '0px' }}>Days</span>
+            {displayDays} DAYS
           </p>
           <p style={{ fontSize: '13px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginTop: '4px' }}>
             {article(scenario.name)} {scenario.name}

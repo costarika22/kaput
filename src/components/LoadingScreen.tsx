@@ -111,7 +111,7 @@ export default function LoadingScreen({ scenario }: LoadingScreenProps) {
           Tap on Kaput
         </p>
 
-        <div style={{ flex: 2 }} />
+        <div style={{ flex: 1 }} />
 
         {/* KAPUT IS JUDGING YOU */}
         <p

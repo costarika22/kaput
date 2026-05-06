@@ -8,9 +8,16 @@
   box-sizing: border-box;
 }
 
+/* Scenario gradient on html so it covers the full scrollable document height */
+html {
+  min-height: 100%;
+  background: var(--scene-bg, linear-gradient(160deg, #b8d4e8 0%, #e8f4f8 100%));
+}
+
 body {
   margin: 0;
   padding: 0;
+  min-height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -29,6 +29,14 @@ export default function GamePage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Paint the scenario gradient on <html> so it covers the full scrollable document
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--scene-bg',
+      `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`
+    );
+  }, [scenario.bgFrom, scenario.bgTo]);
+
   // Reset scroll position on every screen transition
   useEffect(() => {
     window.scrollTo(0, 0);
