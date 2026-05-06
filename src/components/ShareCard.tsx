@@ -119,36 +119,47 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
             textAlign: 'center',
           }}
         >
-          {/* Monkey behind KAPUT logo */}
-          {/* Use plain <img> so html2canvas captures it reliably */}
-          <div style={{ marginBottom: '-28px', zIndex: 0, position: 'relative' }}>
+          {/* Monkey + KAPUT logo composition — fixed-height container so offsetHeight is accurate */}
+          <div style={{ position: 'relative', width: '100%', height: '110px', marginBottom: '8px' }}>
+            {/* Monkey — behind logo */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/${mood}.png`}
               alt="Kaput"
               width={120}
               height={120}
-              style={{ objectFit: 'contain', display: 'block' }}
+              style={{
+                objectFit: 'contain',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 0,
+              }}
             />
+            {/* KAPUT logo — in front of monkey, anchored to bottom */}
+            <h2
+              style={{
+                fontFamily: 'var(--font-bangers), Impact, sans-serif',
+                fontSize: '64px',
+                lineHeight: 1,
+                color: '#0a0a0a',
+                WebkitTextStroke: '10px white',
+                paintOrder: 'stroke fill',
+                letterSpacing: '3px',
+                margin: 0,
+                position: 'absolute',
+                bottom: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                whiteSpace: 'nowrap',
+                zIndex: 1,
+              }}
+            >
+              KAPUT
+            </h2>
           </div>
-
-          {/* KAPUT logo — in front of monkey */}
-          <h2
-            style={{
-              fontFamily: 'var(--font-bangers), Impact, sans-serif',
-              fontSize: '64px',
-              lineHeight: 1,
-              color: '#0a0a0a',
-              WebkitTextStroke: '10px white',
-              paintOrder: 'stroke fill',
-              letterSpacing: '3px',
-              margin: 0,
-              position: 'relative',
-              zIndex: 1,
-            }}
-          >
-            KAPUT
-          </h2>
 
           {/* Score */}
           <p
@@ -174,7 +185,7 @@ export default function ShareCard({ scenario, result, username, rank, onBack }: 
               marginTop: '4px',
             }}
           >
-            {Math.round(result.daysTotal)} Days
+            {Math.round(result.daysTotal)} DAYS
           </p>
           <p
             style={{
