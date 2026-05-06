@@ -8,10 +8,12 @@
   box-sizing: border-box;
 }
 
-/* Scenario gradient on html so it covers the full scrollable document height */
+/* Scenario gradient on html — attachment:fixed pins it to the viewport so it
+   covers the entire scrollable document regardless of content height */
 html {
   min-height: 100%;
   background: var(--scene-bg, linear-gradient(160deg, #b8d4e8 0%, #e8f4f8 100%));
+  background-attachment: fixed;
 }
 
 body {
