@@ -120,25 +120,28 @@ export default function ResultsScreen({
           flexDirection: 'column',
         }}
       >
-        {/* Score header — centered */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <p style={{ fontSize: '12px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginBottom: '4px' }}>
-            You would survive
-          </p>
-          <p
-            className="score-reveal"
-            style={{ fontSize: '72px', fontWeight: 900, color: '#0a0a0a', lineHeight: 1, letterSpacing: '-2px' }}
-          >
-            {displayDays} DAYS
-          </p>
-          <p style={{ fontSize: '12px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', marginTop: '6px' }}>
-            {article(scenario.name)} {scenario.name}
-          </p>
-        </div>
+        {/* Two-column hero: monkey left, score stack right */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+          {/* Left: monkey */}
+          <div style={{ flexShrink: 0, width: '130px' }}>
+            <MonkeyExpression mood={mood} size={130} />
+          </div>
 
-        {/* Monkey — left-aligned, 120px */}
-        <div style={{ marginBottom: '16px' }}>
-          <MonkeyExpression mood={mood} size={120} />
+          {/* Right: YOU WOULD SURVIVE / score / scenario */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '11px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', margin: '0 0 2px' }}>
+              You would survive
+            </p>
+            <p
+              className="score-reveal"
+              style={{ fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 900, color: '#0a0a0a', lineHeight: 1, letterSpacing: '-1px', margin: 0 }}
+            >
+              {displayDays} DAYS
+            </p>
+            <p style={{ fontSize: '11px', letterSpacing: '3px', color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase', margin: '6px 0 0' }}>
+              {article(scenario.name)} {scenario.name}
+            </p>
+          </div>
         </div>
 
         {/* Verdict — full-width italic, plain on background */}
@@ -290,7 +293,8 @@ export default function ResultsScreen({
             onClick={onTryAgain}
             style={{
               flex: 1,
-              padding: '18px',
+              height: '56px',
+              padding: '0 18px',
               background: '#0a0a0a',
               color: '#ffffff',
               fontFamily: 'var(--font-fira), monospace',
