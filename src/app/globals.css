@@ -8,12 +8,13 @@
   box-sizing: border-box;
 }
 
-/* Scenario gradient on html — attachment:fixed pins it to the viewport so it
-   covers the entire scrollable document regardless of content height */
+/* Scenario gradient on html — min-height 100dvh ensures the gradient covers the
+   full scrollable document. background-attachment:fixed is intentionally NOT used
+   here because it conflicts with CSS filter animations on child elements (e.g.
+   .animated-gradient), causing the html background to bleed through on mobile. */
 html {
-  min-height: 100%;
+  min-height: 100dvh;
   background: var(--scene-bg, linear-gradient(160deg, #b8d4e8 0%, #e8f4f8 100%));
-  background-attachment: fixed;
 }
 
 body {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Screen, JudgmentResult } from '@/types';
 import { getTodayScenario } from '@/lib/scenarios';
 import { getUsername, setUsername as saveUsername, incrementTodayAttemptCount } from '@/lib/username';
@@ -29,8 +29,9 @@ export default function GamePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Paint the scenario gradient on <html> so it covers the full scrollable document
-  useEffect(() => {
+  // Paint the scenario gradient on <html> synchronously before first paint so the
+  // LoadingScreen and every other screen never flash a stale --scene-bg value.
+  useLayoutEffect(() => {
     document.documentElement.style.setProperty(
       '--scene-bg',
       `linear-gradient(160deg, ${scenario.bgFrom} 0%, ${scenario.bgTo} 100%)`
